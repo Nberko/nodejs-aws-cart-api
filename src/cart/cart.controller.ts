@@ -45,12 +45,12 @@ export class CartController {
   @Put()
   async updateUserCart(
     @Req() req: AppRequest,
-    @Body() body: PutCartPayload,
+    @Body() body: { products: Array<{ productId: string; count: number }> },
   ): Promise<CartItem[]> {
     // TODO: validate body payload...
-    const cart = await this.cartService.updateByUserId(
+    const cart = await this.cartService.updateCartWithProducts(
       getUserIdFromRequest(req),
-      body,
+      body.products || [],
     );
 
     return cart.items || [];

@@ -40,6 +40,56 @@ export class CartService {
     return this.createByUserId(userId);
   }
 
+  async updateCartWithProducts(
+    userId: string,
+    products: Array<{ productId: string; count: number }>,
+  ): Promise<Cart> {
+    const userCart = await this.findOrCreateByUserId(userId);
+
+    // Process each product in the array
+    for (const product of products) {
+      const existingItem = userCart.items?.find(
+        (item) => item.productId === product.productId,
+      );
+
+      if (existingItem) {
+        if (product.count === 0) {
+          // Remove item if count is 0
+          await this.cartItemRepository.remove(existingItem);
+          userCart.items = userCart.items.filter(
+            (item) => item.id !== existingItem.id,
+          );
+        } else {
+          // Update count
+          existingItem.count = product.count;
+          await this.cartItemRepository.save(existingItem);
+        }
+      } else if (product.count > 0) {
+        // Add new item
+        const newItem = this.cartItemRepository.create({
+          cartId: userCart.id,
+          productId: product.productId,
+          count: product.count,
+        });
+        const savedItem = await this.cartItemRepository.save(newItem);
+        if (!userCart.items) {
+          userCart.items = [];
+        }
+        userCart.items.push(savedItem);
+      }
+    }
+
+    // Update cart's updated_at timestamp
+    userCart.updatedAt = new Date();
+    await this.cartRepository.save(userCart);
+
+    // Return cart with updated items
+    return this.cartRepository.findOne({
+      where: { id: userCart.id },
+      relations: ['items'],
+    });
+  }
+
   async updateByUserId(userId: string, payload: PutCartPayload): Promise<Cart> {
     const userCart = await this.findOrCreateByUserId(userId);
 
