@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import {
   SecretsManagerClient,
   GetSecretValueCommand,
@@ -26,27 +27,34 @@ async function getPasswordFromSecretsManager(
   }
 }
 
-export async function getDatabaseConfig(): Promise<TypeOrmModuleOptions> {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+export const getDatabaseConfig = async (
+  configService: ConfigService,
+): Promise<TypeOrmModuleOptions> => {
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+  const isLambda = !!configService.get<string>('AWS_LAMBDA_FUNCTION_NAME');
 
   // In Lambda/Production, get password from Secrets Manager
   let password: string;
 
-  if (isLambda && process.env.DB_SECRET_ARN) {
-    password = await getPasswordFromSecretsManager(process.env.DB_SECRET_ARN);
+  if (isLambda) {
+    const secretArn = configService.get<string>('DB_SECRET_ARN');
+    if (secretArn) {
+      password = await getPasswordFromSecretsManager(secretArn);
+    } else {
+      password = configService.get<string>('DB_PASSWORD', 'postgres');
+    }
   } else {
     // For local development, use password from env or default
-    password = process.env.DB_PASSWORD || 'postgres';
+    password = configService.get<string>('DB_PASSWORD', 'postgres');
   }
 
   return {
     type: 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    username: process.env.DB_USERNAME || 'postgres',
+    host: configService.get<string>('DB_HOST', 'localhost'),
+    port: configService.get<number>('DB_PORT', 5432),
+    username: configService.get<string>('DB_USERNAME', 'postgres'),
     password,
-    database: process.env.DB_NAME || 'nestcartdb',
+    database: configService.get<string>('DB_NAME', 'nestcartdb'),
     entities: [Cart, CartItem],
     synchronize: !isProduction, // Set to false in production, use migrations
     logging: !isProduction,
@@ -56,4 +64,4 @@ export async function getDatabaseConfig(): Promise<TypeOrmModuleOptions> {
         }
       : false,
   };
-}
+};
