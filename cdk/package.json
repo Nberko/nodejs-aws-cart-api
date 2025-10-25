@@ -1,0 +1,30 @@
+{
+  "name": "cdk",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
+    "deploy": "AWS_PROFILE=deploy cdk deploy --require-approval never",
+    "destroy": "AWS_PROFILE=deploy cdk destroy",
+    "synth": "AWS_PROFILE=deploy cdk synth",
+    "diff": "AWS_PROFILE=deploy cdk diff",
+    "bootstrap": "AWS_PROFILE=deploy cdk bootstrap",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "aws-cdk": "^2.1031.0",
+    "aws-cdk-lib": "^2.221.0",
+    "constructs": "^10.4.2",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
