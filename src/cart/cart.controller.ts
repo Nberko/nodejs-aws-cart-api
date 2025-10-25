@@ -28,6 +28,11 @@ export class CartController {
   @UseGuards(BasicAuthGuard)
   @Get()
   async findUserCart(@Req() req: AppRequest): Promise<CartItem[]> {
+    // Workaround for Lambda esbuild DI issue
+    if (!this.cartService) {
+      throw new Error('CartService not available - DI issue in Lambda bundling');
+    }
+
     const cart = await this.cartService.findOrCreateByUserId(
       getUserIdFromRequest(req),
     );

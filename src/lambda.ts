@@ -2,8 +2,8 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { Context, Handler } from 'aws-lambda';
-import serverlessExpress from '@vendia/serverless-express';
-import express from 'express';
+import { configure } from '@vendia/serverless-express';
+import * as express from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -24,13 +24,17 @@ async function bootstrap() {
 
     await nestApp.init();
 
-    cachedServer = serverlessExpress({ app: expressApp });
+    cachedServer = configure({ app: expressApp });
   }
 
   return cachedServer;
 }
 
-export const handler: Handler = async (event: any, context: Context, callback: any) => {
+export const handler: Handler = async (
+  event: any,
+  context: Context,
+  callback: any,
+) => {
   const server = await bootstrap();
   return server(event, context, callback);
 };

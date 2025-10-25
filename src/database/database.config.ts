@@ -56,7 +56,7 @@ export const getDatabaseConfig = async (
     password,
     database: configService.get<string>('DB_NAME', 'nestcartdb'),
     entities: [Cart, CartItem],
-    synchronize: !isProduction, // Set to false in production, use migrations
+    synchronize: true, // Auto-create tables (OK for learning/demo, use migrations in real prod)
     logging: !isProduction,
     ssl: isProduction
       ? {

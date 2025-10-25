@@ -1,7 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as lambdaNodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
@@ -81,10 +80,19 @@ export class NestApiStack extends cdk.Stack {
     });
 
     // Lambda function that runs the NestJS application
-    const lambdaFunction = new lambdaNodejs.NodejsFunction(this, 'NestLambdaFunction', {
+    // Using regular Function with AssetCode instead of NodejsFunction to avoid esbuild DI issues
+    const lambdaFunction = new lambda.Function(this, 'NestLambdaFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
-      entry: path.join(__dirname, '../../src/lambda.ts'),
-      handler: 'handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '../..'), {
+        bundling: {
+          image: lambda.Runtime.NODEJS_20_X.bundlingImage,
+          command: [
+            'bash', '-c',
+            'cp -r /asset-input/node_modules /asset-input/package.json /asset-output/ && cp -r /asset-input/dist/src/* /asset-output/',
+          ],
+        },
+      }),
+      handler: 'lambda.handler',
       timeout: cdk.Duration.seconds(30),
       memorySize: 512,
       vpc,
@@ -99,20 +107,6 @@ export class NestApiStack extends cdk.Stack {
         DB_NAME: 'nestcartdb',
         DB_USERNAME: 'dbadmin',
         DB_SECRET_ARN: database.secret?.secretArn || '',
-      },
-      projectRoot: path.join(__dirname, '../..'),
-      depsLockFilePath: path.join(__dirname, '../../package-lock.json'),
-      bundling: {
-        minify: false,
-        sourceMap: true,
-        externalModules: [
-          'aws-sdk',
-          '@nestjs/websockets',
-          '@nestjs/microservices',
-          'class-transformer',
-          'class-validator',
-          'cache-manager',
-        ],
       },
     });
 
