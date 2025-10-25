@@ -18,7 +18,7 @@ export class Cart {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'user_id', nullable: false })
+  @Column({ name: 'user_id', type: 'varchar', nullable: false })
   userId: string;
 
   @Column({

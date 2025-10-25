@@ -14,14 +14,14 @@ export class CartItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'cart_id' })
+  @Column({ name: 'cart_id', type: 'uuid' })
   cartId: string;
 
   @ManyToOne(() => Cart, (cart) => cart.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'cart_id' })
   cart: Cart;
 
-  @Column({ name: 'product_id', nullable: false })
+  @Column({ name: 'product_id', type: 'varchar', nullable: false })
   productId: string;
 
   @Column({ type: 'integer', default: 1 })
